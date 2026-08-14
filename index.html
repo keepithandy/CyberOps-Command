@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberOps: Operative Command</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #c5c5d0;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #2a2f4a;
+      padding-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: #7dd3fc;
+      text-shadow: 0 0 20px rgba(125, 211, 252, 0.3);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #7a7f95;
+    }
+
+    .notifications {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+      max-width: 300px;
+    }
+
+    .notification {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .notification-success {
+      background: rgba(74, 222, 128, 0.2);
+      border: 1px solid #4ade80;
+      color: #4ade80;
+    }
+
+    .notification-error {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+
+    .notification-info {
+      background: rgba(125, 211, 252, 0.2);
+      border: 1px solid #7dd3fc;
+      color: #7dd3fc;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat-item {
+      background: rgba(30, 41, 82, 0.6);
+      border: 1px solid #3f4a6f;
+      border-radius: 8px;
+      padding: 12px 20px;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #7a7f95;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #7dd3fc;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .wide-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1200px) {
+      .wide-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .main-grid, .wide-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(20, 27, 55, 0.7);
+      border: 1px solid #3f4a6f;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #7dd3fc;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(125, 211, 252, 0.2);
+      padding-bottom: 8px;
+    }
+
+    button {
+      background: #1f2a4f;
+      border: 1px solid #7dd3fc;
+      color: #7dd3fc;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    button:hover:not(:disabled) {
+      background: #7dd3fc;
+      color: #1f2a4f;
+      box-shadow: 0 0 15px rgba(125, 211, 252, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .btn-danger {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #ef4444;
+      color: #1f2a4f;
+    }
+
+    .recruit-section {
+      margin-bottom: 16px;
+    }
+
+    .recruit-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 15, 40, 0.5);
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(63, 74, 111, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .recruit-option:hover {
+      border-color: #3f4a6f;
+      background: rgba(20, 30, 60, 0.7);
+    }
+
+    .recruit-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .soldier-name {
+      font-weight: 600;
+      color: #7dd3fc;
+    }
+
+    .soldier-class-badge {
+      background: rgba(125, 211, 252, 0.2);
+      border: 1px solid #7dd3fc;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #7dd3fc;
+    }
+
+    .soldier-stats {
+      font-size: 12px;
+      color: #7a7f95;
+    }
+
+    .cost {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f59e0b;
+      text-align: right;
+      min-width: 60px;
+    }
+
+    .btn-recruit {
+      margin-left: 8px;
+    }
+
+    .soldiers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .soldier-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: rgba(10, 15, 40, 0.5);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      border: 1px solid rgba(63, 74, 111, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .soldier-item:hover {
+      border-color: #3f4a6f;
+    }
+
+    .soldier-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .soldier-name-display {
+      font-weight: 600;
+      color: #7dd3fc;
+    }
+
+    .soldier-level {
+      font-size: 11px;
+      color: #7a7f95;
+    }
+
+    .soldier-equipment {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .eq-tag {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .soldier-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .squad-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .squad-item {
+      background: rgba(10, 15, 40, 0.5);
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(63, 74, 111, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .squad-item:hover {
+      border-color: #3f4a6f;
+    }
+
+    .squad-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .squad-name {
+      font-weight: 600;
+      color: #7dd3fc;
+      font-size: 15px;
+    }
+
+    .squad-stats {
+      font-size: 12px;
+      color: #7a7f95;
+    }
+
+    .squad-members {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(63, 74, 111, 0.3);
+      border-bottom: 1px solid rgba(63, 74, 111, 0.3);
+    }
+
+    .member-badge {
+      background: rgba(125, 211, 252, 0.15);
+      border: 1px solid #7dd3fc;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #7dd3fc;
+    }
+
+    .squad-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .squad-actions button {
+      flex: 1;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
+    .missions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mission-item {
+      background: rgba(10, 15, 40, 0.5);
+      padding: 12px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border: 1px solid rgba(63, 74, 111, 0.4);
+      border-left: 4px solid;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .mission-item:hover {
+      border-color: #3f4a6f;
+    }
+
+    .mission-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .mission-name {
+      font-weight: 600;
+      color: #7dd3fc;
+    }
+
+    .mission-reward {
+      font-size: 12px;
+      color: #7a7f95;
+    }
+
+    .mission-unavailable {
+      color: #5a5f7f;
+      font-size: 12px;
+    }
+
+    .mission-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .btn-mission-small {
+      font-size: 11px;
+      padding: 6px 10px;
+    }
+
+    .active-missions {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #3f4a6f;
+    }
+
+    .progress-bar {
+      background: rgba(10, 15, 40, 0.6);
+      border: 1px solid #7dd3fc;
+      border-radius: 3px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7dd3fc, #3b82f6);
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(125, 211, 252, 0.5);
+    }
+
+    .mission-run {
+      background: rgba(10, 15, 40, 0.5);
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(63, 74, 111, 0.4);
+    }
+
+    .mission-run-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .mission-run-name {
+      font-weight: 600;
+      color: #7dd3fc;
+    }
+
+    .mission-run-time {
+      font-size: 12px;
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .mission-rewards-preview {
+      font-size: 11px;
+      color: #7a7f95;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(63, 74, 111, 0.3);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #5a5f7f;
+      padding: 32px 20px;
+      font-size: 14px;
+    }
+
+    small {
+      font-size: 11px;
+      color: #5a5f7f;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #3f4a6f;
+      color: #5a5f7f;
+      font-size: 12px;
+    }
+
+    .footer button {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ CyberOps Command</h1>
+      <span class="subtitle">v0.0.1 Alpha — Deploy. Infiltrate. Dominate.</span>
+    </header>
+
+    <div id="notifications" class="notifications"></div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-label">💰 Credits</div>
+        <div class="stat-value" id="goldDisplay">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">🤖 Operatives</div>
+        <div class="stat-value" id="soldierCountDisplay">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">📊 Metrics</div>
+        <div class="stat-value" style="font-size: 14px;" id="gameStats">0 | 0 | 0</div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- Recruitment Panel -->
+      <div class="panel">
+        <div class="panel-title">🔧 Operative Recruitment</div>
+        <div class="recruit-section" id="recruitOptions">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Soldiers Panel -->
+      <div class="panel">
+        <div class="panel-title">🤖 Active Operatives</div>
+        <div id="soldiersList" class="soldiers-list">
+          <div class="empty-state">No operatives deployed yet. Recruit your first!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- Squads Panel -->
+      <div class="panel">
+        <div class="panel-title">� Task Forces</div>
+        <div id="squadsList" class="squad-list">
+          <div class="empty-state">No task forces. Assemble one!</div>
+        </div>
+      </div>
+
+      <!-- Missions Panel -->
+      <div class="panel">
+        <div class="panel-title">🎯 Available Operations</div>
+        <div id="missionsList" class="missions-list">
+          <div class="empty-state">No operations available.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Missions -->
+    <div class="panel active-missions">
+      <div class="panel-title">⚡ Active Operations</div>
+      <div id="activeMissions" class="missions-list">
+        <div class="empty-state">No active operations.</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🔐 Data syncing every 10 seconds...</p>
+      <button onclick="resetGame()">FACTORY RESET</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
