@@ -1,342 +1,329 @@
-<<<<<<< HEAD
-# Idle Army - 0.0.0.1 Alpha
+# ⚡ CyberOps: Command
+**Deploy. Infiltrate. Dominate.**
 
-A minimal idle army management game built in vanilla JavaScript.
+An idle army management game where you recruit, equip, and deploy elite cyber operatives on covert missions. Build your intelligence agency from the ground up—one operative at a time.
 
-## Overview
+> **Current Version:** `0.0.1 Alpha`  
+> **Status:** Playable Early Prototype  
+> **Built with:** Vanilla JavaScript (no frameworks, no build steps)
 
-Recruit soldiers, organize them into squads, and send them on missions to earn gold and gain experience. Expand your army and tackle harder challenges as you progress.
+---
 
-## Current Features
+## 🎮 Quick Start
 
-- **Recruitment**: Recruit Soldiers, Scouts, or Defenders with different stats
-- **Soldiers**: Tracked individually with level, experience, stats (HP, DMG, DEF)
-- **Squads**: Group up to 5 soldiers per squad
-- **Missions**: Send squads on 3 difficulty tiers with time-based completion
-- **Leveling**: Soldiers gain experience from missions and level up with stat increases
-- **Gold Economy**: Spend gold to recruit, earn from mission completion
+1. Open `index.html` in any modern web browser
+2. You start with 5,000 credits—use them to recruit your first operatives
+3. Organize recruits into task forces (squads)
+4. Deploy task forces on cyber operations to earn credits and experience
+5. Equip fallen enemies' tech to boost your operatives' abilities
+6. Unlock harder missions as your operatives level up
 
-## How to Play
+**That's it.** No installation, no dependencies, no fuss.
 
-1. **Recruit** your first soldier(s) using starting gold (500)
-2. **Create a Squad** and add soldiers to it
-3. **Select a Mission** and assign a squad to it
-4. **Watch** the mission progress bar fill over time
-5. **Collect Rewards** when missions complete (gold + soldier exp)
-6. **Level Up** soldiers and unlock harder missions
+---
 
-## File Structure
+## 🎯 Core Gameplay Loop
 
 ```
-.
-├── index.html       # Main HTML file (UI layout & styles)
-├── game.js          # Game logic (soldiers, squads, missions, loop)
-└── README.md        # This file
+Recruit → Equip → Organize → Deploy → Earn → Upgrade → Repeat
 ```
 
-## Running the Game
+### 1. **Recruit** Elite Operatives
+Choose from five operative archetypes, each with unique abilities:
+- **Operative** (Tactical Strike) — balanced attacker
+- **Netrunner** (Code Injection) — hacker specialist
+- **Enforcer** (Firewall) — heavy tank
+- **Augmented** (System Override) — cyborg damage dealer
+- **Commando** (Blitzkrieg) — elite glass cannon
 
-1. Clone or copy all files into a directory
-2. Open `index.html` in a web browser
-3. No build step, no server needed
+### 2. **Equip** with Cyber Augmentations
+Earn loot from missions and outfit operatives with:
+- **Offensive Gear:** Neural Processors, Combat Algorithms, AI Combat Suites
+- **Defensive Tech:** Reactive Bodysuits, Tactical Exoskeletons, Quantum Shielding
+- **Exotic Augments:** Nanotech Armor, Enhanced Reflexes, Regenerative Implants
 
-## Architecture Notes
+Each item has a rarity tier—legendary gear provides massive stat boosts.
 
-### Game State
-All state stored in the `game` object:
-- `gold` - Currency
-- `soldiers` - Array of Soldier objects
-- `squads` - Array of Squad objects
-- `activeMissions` - Array of currently running missions
+### 3. **Organize** into Task Forces
+Group up to 5 operatives per squad. Squad composition matters:
+- Balanced teams for medium ops
+- Heavy tanks for dangerous infiltrations
+- Speed-focused squads for quick hits
 
-### Core Classes
-- **Soldier**: Individual unit with stats, level, experience
-- **Squad**: Container for up to 5 soldiers; tracks membership
-- **ActiveMission**: Tracks running mission progress and completion
+### 4. **Deploy** on Cyber Operations
+Seven campaign missions await, from easy perimeter scans to endgame Global Cyberwar ops:
 
-### Game Loop
-Runs every 100ms via `setInterval()`:
-1. Update active missions (check completion)
-2. Render UI based on current game state
+| Mission | Duration | Credits | Exp | Min Level | Loot |
+|---------|----------|---------|-----|-----------|------|
+| Perimeter Scan | 3s | 100 | 40 | 1 | Scanning Module |
+| Firewall Probe | 5s | 200 | 60 | 1 | Encryption Key |
+| Data Exfiltration | 8s | 350 | 100 | 2 | Classified Archive |
+| Network Infiltration | 10s | 400 | 120 | 2 | Access Protocol |
+| Corporate Espionage | 15s | 600 | 180 | 4 | Proprietary Tech |
+| Satellite Takeover | 20s | 1,000 | 300 | 5 | Orbital Controller |
+| Global Cyberwar | 30s | 2,000 | 600 | 8 | Quantum Processor |
 
-## Roadmap (Future Versions)
+### 5. **Level Up** Your Operatives
+Each operative gains experience from successful missions. Leveling increases:
+- HP (survivability)
+- DMG (mission success rate)
+- DEF (armor effectiveness)
 
-- [ ] **Equipment & Loot** - Soldiers equip items from mission drops
-- [ ] **Research Tree** - Unlock upgrades for progression
-- [ ] **Prestige System** - Reset for permanent bonuses
-- [ ] **Passive Offline Earnings** - Earn while away (50% rate)
-- [ ] **Weekly Challenges** - Special limited-time missions
-- [ ] **Save/Load** - localStorage persistence
-- [ ] **Audio & Animations** - Polish and feel
-- [ ] **Mobile Optimization** - Touch controls
+Higher-level operatives unlock tougher operations and increase mission success rates.
 
-## Notes for Development
-
-### Adding New Content
-- **Recruitment Templates**: Add to `RECRUIT_TEMPLATES` array
-- **Missions**: Add to `MISSIONS` array with `id`, `name`, `duration`, `reward`, `minLevel`, `difficulty`
-- **Soldiers Stats**: Modify constructor in `Soldier` class
-
-### Saving Game State
-Currently, state is volatile (lost on page refresh). To persist:
-```javascript
-// Save
-localStorage.setItem('gameState', JSON.stringify(game));
-
-// Load
-const saved = localStorage.getItem('gameState');
-if (saved) Object.assign(game, JSON.parse(saved));
-```
-
-### Performance
-- Rendering updates every 100ms (can be tuned)
-- For 50+ soldiers, consider optimizing DOM updates (batch, virtual lists)
-- Mission calculations are O(n) where n = active missions (very fast)
-
-## License
-
-Personal project. Feel free to fork and experiment.
+### 6. **Earn & Repeat**
+Completed missions reward credits and loot. Reinvest into recruitment, upgrades, and new gear. Watch your intelligence agency grow.
 
 ---
 
-**Built by**: Northline Studio  
-**Version**: 0.0.0.1 Alpha  
-**Status**: Early Prototype
-=======
-# Legion Forge
-# ⚔️ Legion Forge
+## 📊 Game State & Resources
 
-Legion Forge is an idle army management game focused on building, expanding, and commanding a growing military force.
+### **Credits**
+Your primary currency. Spend credits to recruit new operatives—costs scale with operative tier.
 
-Recruit soldiers, organize them into squads, send forces on missions, collect rewards, and steadily turn a small fighting force into a powerful legion.
+### **Operatives**
+Individual agents tracked with:
+- Name, class, and unique ability
+- Level and cumulative experience
+- Base stats (HP, DMG, DEF)
+- Equipped augmentations
 
-> **Current Version:** `0.0.0.1 Alpha`  
-> **Development Status:** Early Prototype
+### **Task Forces**
+Squads hold up to 5 operatives and deploy as a unit. Squad strength is the sum of member stats plus all equipped gear.
 
----
+### **Active Operations**
+Once deployed, a mission continues running. Track progress on a real-time bar. Claim rewards automatically when complete.
 
-## 🎮 About the Game
-
-Legion Forge is designed around a simple idle progression loop:
-
-**Recruit → Organize → Deploy → Earn → Upgrade → Expand**
-
-The goal is to build an army that continues making progress while you are away, while giving you meaningful decisions to make when you return.
-
-The current prototype establishes the basic command-center interface and the foundation for the game's core systems.
-
----
-
-## 🏰 Current Prototype
-
-The current build contains the initial interface for:
-
-- Gold management
-- Soldier recruitment
-- Army management
-- Soldier levels
-- Squad organization
-- Mission selection
-- Mission rewards
-- Active missions
-- Mission progress tracking
-- Responsive desktop/mobile layout
-
-The prototype is intentionally small. It is being used to establish the game's core structure before larger progression systems are added.
+### **Equipment**
+Loot drops from missions in five rarity tiers:
+- **Common** (grey) — Basic augmentations
+- **Uncommon** (green) — Solid upgrades
+- **Rare** (blue) — Powerful stat boosts
+- **Epic** (purple) — Significant power spikes
+- **Legendary** (gold) — Endgame gear
 
 ---
 
-## ⚔️ Core Systems
+## 📈 Progression Systems
 
-### Recruitment
+### **Soldier Leveling**
+Operatives gain experience on every mission. Accumulated experience triggers level-ups that permanently improve stats.
 
-Recruit soldiers using Gold and begin building your army.
+### **Equipment Rarity**
+Each piece of gear has a rarity that determines its power. Legendary items have the highest impact; common items are plentiful but weak.
 
-Different soldier types are planned to have different characteristics, costs, and roles.
+### **Mission Difficulty Tiers**
+- **Tier 1 (Difficulty 1):** Early-game tutorials
+- **Tier 2 (Difficulty 2):** Mid-game challenges
+- **Tier 3 (Difficulty 3):** Late-game operations
+- **Tier 4 (Difficulty 4):** Endgame supremacy
 
-### Army
+Each tier requires higher operative levels and better gear.
 
-Your army is made up of individual soldiers.
-
-Soldiers are intended to develop over time through levels, upgrades, and future specialization.
-
-### Squads
-
-Organize individual soldiers into squads.
-
-Squads will eventually become an important part of determining how efficiently your army performs missions.
-
-### Missions
-
-Deploy squads on missions to generate rewards.
-
-Missions are intended to provide the primary idle progression loop, with different durations, requirements, risks, and rewards planned for future versions.
-
-### Active Missions
-
-Once a mission begins, it can continue running while you manage the rest of your army.
-
-The long-term goal is to allow players to maintain multiple operations simultaneously and build an increasingly automated military economy.
-
----
-
-## 💰 Resources
-
-Gold is the primary resource in the current prototype.
-
-Future versions may introduce additional resources connected to:
-
-- Army upkeep
-- Equipment
-- Training
-- Construction
-- Territory
-- Research
-- Advanced military operations
-
-Resources will be introduced gradually as the underlying progression systems are developed.
-
----
-
-## 📈 Progression
-
-Legion Forge is intended to have long-term incremental progression.
-
-Possible progression layers include:
-
-- Soldier levels
-- Soldier classes
-- Squad upgrades
-- Better equipment
-- Stronger missions
-- New regions
-- Military facilities
-- Command upgrades
-- Specialized units
-- Prestige/rebirth systems
-- Permanent bonuses
-- Large-scale campaigns
-
-The progression system will be developed around the idea that every session should leave the army stronger than before.
-
----
-
-## 🗺️ Planned Game Loop
-
-The intended long-term loop is:
-
-1. Recruit soldiers
-2. Build squads
-3. Select missions
-4. Deploy your forces
-5. Wait for missions to complete
-6. Collect rewards
-7. Improve the army
-8. Unlock stronger operations
-9. Expand your military infrastructure
-10. Repeat
-
-As the game develops, the player's army should gradually move from a small group of recruits into a large automated military organization.
+### **Economy Scaling**
+As you progress, mission rewards and recruitment costs both increase. Early operatives are cheap; elite-tier recruits cost significantly more but offer superior stats.
 
 ---
 
 ## 🛠️ Development Roadmap
 
-### Phase 1 — Prototype
-- [x] Initial command-center interface
-- [x] Recruitment interface
-- [x] Army interface
-- [x] Squad interface
-- [x] Mission interface
-- [x] Active mission interface
-- [x] Responsive layout
-- [ ] Functional gameplay logic
-- [ ] Persistent save system
+### Phase 1 ✅ **UI & Architecture**
+- [x] Dark command-center interface
+- [x] Responsive desktop/mobile layout
+- [x] Real-time mission tracking
+- [x] Notification system
 
-### Phase 2 — Core Gameplay
-- [ ] Implement soldier recruitment
-- [ ] Implement Gold economy
-- [ ] Implement soldier progression
-- [ ] Implement squad creation
-- [ ] Implement squad management
-- [ ] Implement mission deployment
-- [ ] Implement mission completion
-- [ ] Implement reward collection
-- [ ] Implement idle/offline progression
+### Phase 2 🔄 **Core Systems** (Current)
+- [x] Soldier recruitment & leveling
+- [x] Squad organization
+- [x] Equipment system with rarity tiers
+- [x] Mission deployment & completion
+- [x] Reward collection and stat scaling
+- [ ] **localStorage persistence** (coming soon)
 
-### Phase 3 — Army Progression
-- [ ] Soldier classes
-- [ ] Equipment
-- [ ] Squad upgrades
-- [ ] Training
-- [ ] Command upgrades
-- [ ] More mission types
-- [ ] Increasing difficulty
-- [ ] New military units
+### Phase 3 🚀 **Progression & Polish**
+- [ ] Offline progression (earn credits while closed)
+- [ ] Research tree / tech upgrades
+- [ ] Squad ability combos (synergy bonuses)
+- [ ] Better visual feedback on stat changes
 
-### Phase 4 — World & Expansion
-- [ ] Regions
-- [ ] Territories
-- [ ] Campaign progression
-- [ ] Military facilities
-- [ ] World events
-- [ ] Advanced missions
-- [ ] Larger army management
+### Phase 4 🌍 **Expansion Content**
+- [ ] 10+ additional operative classes
+- [ ] 20+ new cyber operations
+- [ ] Prestige/rebirth system
+- [ ] Weekly challenges & leaderboards
 
-### Phase 5 — Long-Term Progression
-- [ ] Prestige system
-- [ ] Permanent bonuses
-- [ ] Endgame progression
-- [ ] Advanced automation
-- [ ] Additional strategic systems
+### Phase 5 ∞ **Long-Term Systems**
+- [ ] Territory control mechanics
+- [ ] Rival agency AI
+- [ ] Endgame meta-progression
+- [ ] Audio & particle effects
 
 ---
 
-## 🧪 Current Development Status
+## 💾 Save Your Progress
 
-Legion Forge is **not a finished game**.
+**Currently, game state is lost on page refresh.** To enable auto-save, this coming soon:
 
-The project is currently in the earliest prototype stage. The primary focus is establishing the interface, gameplay architecture, and core idle loop before expanding into larger systems.
+```javascript
+// Manual save (paste into browser console)
+localStorage.setItem('cyberopsState', JSON.stringify(game));
 
-Features listed under the roadmap are planned concepts and should not be considered implemented unless marked as completed.
-
----
-
-## 🎨 Design Direction
-
-Legion Forge is being developed around a dark military command-center aesthetic.
-
-The intended presentation combines:
-
-- Dark interfaces
-- Military organization
-- Clear resource management
-- Squad-based progression
-- Tactical mission selection
-- Incremental numbers
-- Long-term army growth
-
-The interface should remain readable and functional as the player's army becomes substantially larger.
+// Manual load (paste into browser console)
+const saved = localStorage.getItem('cyberopsState');
+if (saved) Object.assign(game, JSON.parse(saved));
+```
 
 ---
 
-## 💻 Technology
+## 🏗️ Architecture
 
-The current prototype is built as a lightweight browser-based game using:
+### **File Structure**
+```
+.
+├── index.html       # UI layout & dark military styling
+├── game.js          # Core game logic & systems
+├── README.md        # This file
+├── LICENSE          # MIT License
+└── .gitignore       # Git config
+```
 
-- HTML
-- CSS
-- JavaScript
+### **Core Classes**
 
-The project is intentionally kept lightweight during early development.
+**Soldier**
+```javascript
+{
+  id, name, class, level, experience,
+  baseHp, baseDmg, baseDef,
+  equipmentIds[], ability, squadId
+}
+```
+
+**Squad**
+```javascript
+{
+  id, name, members[],
+  combatPower  // sum of member stats
+}
+```
+
+**ActiveMission**
+```javascript
+{
+  id, missionId, squadId,
+  startTime, elapsed, rewards
+}
+```
+
+### **Game Loop**
+Runs every 100ms:
+1. Update active mission timers
+2. Check for mission completion
+3. Apply rewards to operatives
+4. Re-render all UI panels
+
+This lightweight loop keeps the game responsive even with 100+ operatives and multiple simultaneous missions.
 
 ---
 
-## 📦 Project Structure
+## 🎨 Design Philosophy
 
-```text
-legion-forge/
-├── index.html
-├── game.js
-└── README.md
->>>>>>> 4b774b4cdb253f3e6fbfd9602bd5afcbcb2c62a0
+**CyberOps: Command** embraces a cyberpunk military aesthetic:
+- Dark blue command-center interface with glowing accents
+- Uppercase labels and technical terminology
+- Real-time progress bars and stat displays
+- Notification system for mission events
+- Responsive on desktop and mobile
+
+The UI remains clean and readable as your army grows from a handful of recruits to a full intelligence agency.
+
+---
+
+## 🤖 Operative Abilities Reference
+
+Each operative class has a unique special ability (flavor text for now; combat effects incoming):
+
+| Class | Ability | Playstyle |
+|-------|---------|-----------|
+| Operative | Tactical Strike | All-rounder damage |
+| Netrunner | Code Injection | Hacker infiltration |
+| Enforcer | Firewall | Damage mitigation |
+| Augmented | System Override | Peak damage output |
+| Commando | Blitzkrieg | Speed-focused assault |
+
+---
+
+## ⚙️ Technical Notes
+
+### **Browser Support**
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+
+### **Performance**
+- Zero external dependencies—pure vanilla JS
+- Game loop runs at 10Hz (100ms ticks) for optimal performance
+- Mission calculations are O(n) where n = active missions (negligible load)
+- Tested with 50+ operatives without lag
+
+### **Extending the Game**
+
+**Add a New Operative Class:**
+```javascript
+RECRUIT_TEMPLATES.push({
+  name: 'Specialist',
+  class: 'Infiltrator',
+  cost: 200,
+  hp: 14,
+  dmg: 5,
+  def: 2,
+  ability: 'Stealth Protocol'
+});
+```
+
+**Add a New Mission:**
+```javascript
+MISSIONS.push({
+  id: 'blacksite-raid',
+  name: 'Blacksite Raid',
+  duration: 25,
+  gold: 1500,
+  exp: 400,
+  loot: 'Experimental Weapon',
+  minLevel: 6,
+  difficulty: 3,
+  rewards: 5
+});
+```
+
+**Add Equipment:**
+```javascript
+EQUIPMENT_POOL.push({
+  name: 'Plasma Augment',
+  rarity: 'legendary',
+  dmg: 15,
+  def: 0,
+  hp: 0
+});
+```
+
+---
+
+## 📝 License
+
+Built by **Northline Studio**.  
+Released under the MIT License—fork, experiment, and build on this foundation.
+
+---
+
+## 🎯 What's Next?
+
+- **Save System:** Persistent progress via localStorage (next priority)
+- **Offline Earnings:** Missions continue while you're away (50% reduced rate)
+- **Squad Synergies:** Bonuses for matching operative classes
+- **Event System:** Weekly limited-time operations with unique rewards
+
+Join the command center. Deploy your operatives. Dominate the digital battlefield.
+
+**CyberOps: Command** — Version 0.0.1 Alpha
