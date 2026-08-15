@@ -137,7 +137,7 @@ As you progress, mission rewards and recruitment costs both increase. Early oper
 - [x] Equipment system with rarity tiers
 - [x] Mission deployment & completion
 - [x] Reward collection and stat scaling
-- [ ] **localStorage persistence** (coming soon)
+- [x] **localStorage persistence** (automatic save every 10 seconds)
 
 ### Phase 3 🚀 **Progression & Polish**
 - [ ] Offline progression (earn credits while closed)
@@ -161,16 +161,7 @@ As you progress, mission rewards and recruitment costs both increase. Early oper
 
 ## 💾 Save Your Progress
 
-**Currently, game state is lost on page refresh.** To enable auto-save, this coming soon:
-
-```javascript
-// Manual save (paste into browser console)
-localStorage.setItem('cyberopsState', JSON.stringify(game));
-
-// Manual load (paste into browser console)
-const saved = localStorage.getItem('cyberopsState');
-if (saved) Object.assign(game, JSON.parse(saved));
-```
+Game state is saved automatically to `localStorage` every 10 seconds and restored when the page loads. Existing saves use the `idleArmySave` storage key for compatibility. Invalid save data is discarded so the game can start cleanly.
 
 ---
 
@@ -317,7 +308,6 @@ Released under the MIT License—fork, experiment, and build on this foundation.
 
 ## 🎯 What's Next?
 
-- **Save System:** Persistent progress via localStorage (next priority)
 - **Offline Earnings:** Missions continue while you're away (50% reduced rate)
 - **Squad Synergies:** Bonuses for matching operative classes
 - **Event System:** Weekly limited-time operations with unique rewards
