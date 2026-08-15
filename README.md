@@ -1,7 +1,7 @@
-# ⚡ CyberOps: Command
+# ⚡ CyberOps:Command
 **Deploy. Infiltrate. Dominate.**
 
-An idle army management game where you recruit, equip, and deploy elite cyber operatives on covert missions. Build your intelligence agency from the ground up—one operative at a time.
+A cyber operations management game where you recruit, equip, and deploy elite operatives on covert missions. Build your intelligence agency from the ground up—one operative at a time.
 
 > **Current Version:** `0.0.1 Alpha`  
 > **Status:** Playable Early Prototype  
@@ -226,7 +226,7 @@ This lightweight loop keeps the game responsive even with 100+ operatives and mu
 
 ## 🎨 Design Philosophy
 
-**CyberOps: Command** embraces a cyberpunk military aesthetic:
+**CyberOps:Command** embraces a cyberpunk military aesthetic:
 - Dark blue command-center interface with glowing accents
 - Uppercase labels and technical terminology
 - Real-time progress bars and stat displays
@@ -324,4 +324,4 @@ Released under the MIT License—fork, experiment, and build on this foundation.
 
 Join the command center. Deploy your operatives. Dominate the digital battlefield.
 
-**CyberOps: Command** — Version 0.0.1 Alpha
+**CyberOps:Command** — Version 0.0.1 Alpha
