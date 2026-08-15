@@ -134,8 +134,12 @@ As you progress, mission rewards and recruitment costs both increase. Early oper
 ### Phase 2 🔄 **Core Systems** (Current)
 - [x] Soldier recruitment & leveling
 - [x] Squad organization
+- [x] Formation hierarchy from squads through army command levels
 - [x] Equipment system with rarity tiers
 - [x] Mission deployment & completion
+- [x] Multi-squad command operations with force and supply requirements
+- [x] Squad readiness recovery and deployment locking
+- [x] Operation filtering and operative search
 - [x] Reward collection and stat scaling
 - [x] **localStorage persistence** (automatic save every 10 seconds)
 

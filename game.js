@@ -9,14 +9,19 @@ const game = {
   soldiers: [],
   squads: [],
   activeMissions: [],
+  formations: [],
   equipment: [],
   soldierIdCounter: 0,
   squadIdCounter: 0,
   missionIdCounter: 0,
   equipmentIdCounter: 0,
+  formationIdCounter: 0,
   totalMissionsCompleted: 0,
   totalSoldiersRecruited: 0,
   playtime: 0,
+  intel: 0,
+  supplies: 100,
+  lastReadinessRecovery: Date.now(),
   notifications: [],
 };
 
@@ -62,6 +67,25 @@ const MISSIONS = [
   { id: 'satellite-takeover', name: 'Satellite Takeover', duration: 20, gold: 1000, exp: 300, loot: 'Orbital Controller', minLevel: 5, difficulty: 3, rewards: 5 },
   { id: 'global-cyberwar', name: 'Global Cyberwar', duration: 30, gold: 2000, exp: 600, loot: 'Quantum Processor', minLevel: 8, difficulty: 4, rewards: 6 },
 ];
+
+const FORMATION_DEFINITIONS = {
+  platoon: { label: 'Platoon', childLabel: 'squads', requiredSquads: 3, leader: 'Lieutenant', bonus: 0.1 },
+  company: { label: 'Company', childLabel: 'squads', requiredSquads: 9, leader: 'Captain', bonus: 0.2 },
+  battalion: { label: 'Battalion', childLabel: 'squads', requiredSquads: 27, leader: 'Lieutenant Colonel', bonus: 0.3 },
+  brigade: { label: 'Brigade', childLabel: 'squads', requiredSquads: 81, leader: 'Colonel', bonus: 0.4 },
+  division: { label: 'Division', childLabel: 'squads', requiredSquads: 243, leader: 'Major General', bonus: 0.5 },
+  corps: { label: 'Corps', childLabel: 'squads', requiredSquads: 729, leader: 'Lieutenant General', bonus: 0.6 },
+  army: { label: 'Army', childLabel: 'squads', requiredSquads: 2187, leader: 'General', bonus: 0.75 },
+};
+
+const COMMAND_OPERATIONS = [
+  { id: 'district-lockdown', name: 'District Lockdown', duration: 45, gold: 1200, exp: 260, loot: 'Tactical Cache', minLevel: 3, difficulty: 2, rewards: 4, commandLevel: 'platoon', requiredSquads: 3, supplies: 5 },
+  { id: 'corporate-takeover', name: 'Corporate Takeover', duration: 90, gold: 3500, exp: 700, loot: 'Corporate Vault', minLevel: 6, difficulty: 3, rewards: 5, commandLevel: 'company', requiredSquads: 9, supplies: 15 },
+  { id: 'national-cyberdefense', name: 'National Cyber Defense', duration: 180, gold: 9000, exp: 1800, loot: 'Strategic Archive', minLevel: 10, difficulty: 4, rewards: 6, commandLevel: 'battalion', requiredSquads: 27, supplies: 35 },
+  { id: 'global-network-war', name: 'Global Network War', duration: 360, gold: 24000, exp: 5000, loot: 'Quantum Command Core', minLevel: 15, difficulty: 5, rewards: 6, commandLevel: 'brigade', requiredSquads: 81, supplies: 75 },
+];
+
+const ALL_MISSIONS = [...MISSIONS, ...COMMAND_OPERATIONS];
 
 // ============================================================================
 // SOLDIER CLASS
@@ -151,6 +175,8 @@ class Squad {
     this.name = `Squad ${id}`;
     this.memberIds = [];
     this.completedMissions = 0;
+    this.readiness = 100;
+    this.formationId = null;
   }
 
   addMember(soldier) {
@@ -207,7 +233,46 @@ class Squad {
 
   getRecommendedMissions() {
     const avgLevel = this.getAverageLevel();
-    return MISSIONS.filter(m => m.minLevel <= avgLevel && m.difficulty <= Math.ceil(avgLevel / 2));
+    return ALL_MISSIONS.filter(m => !m.requiredSquads || m.requiredSquads === 1)
+      .filter(m => m.minLevel <= avgLevel && m.difficulty <= Math.ceil(avgLevel / 2));
+  }
+}
+
+class Formation {
+  constructor(id, type, squadIds = []) {
+    const definition = FORMATION_DEFINITIONS[type];
+    this.id = id;
+    this.type = definition ? type : 'platoon';
+    this.name = `${definition ? definition.label : 'Platoon'} ${id}`;
+    this.squadIds = squadIds;
+    this.leaderId = null;
+    this.status = 'ready';
+    this.completedMissions = 0;
+  }
+
+  get definition() {
+    return FORMATION_DEFINITIONS[this.type];
+  }
+
+  getSquads() {
+    return game.squads.filter(squad => this.squadIds.includes(squad.id));
+  }
+
+  getMembers() {
+    return this.getSquads().flatMap(squad => squad.getMembers());
+  }
+
+  getAverageLevel() {
+    const members = this.getMembers();
+    return members.length ? Math.floor(members.reduce((sum, member) => sum + member.level, 0) / members.length) : 0;
+  }
+
+  getStrength() {
+    return this.getMembers().reduce((sum, member) => sum + member.dmg + member.def + member.hp, 0);
+  }
+
+  isComplete() {
+    return this.squadIds.length >= this.definition.requiredSquads;
   }
 }
 
@@ -216,9 +281,11 @@ class Squad {
 // ============================================================================
 
 class ActiveMission {
-  constructor(squadId, mission, missionId) {
+  constructor(squadIds, mission, missionId, formationId = null) {
     this.id = missionId;
-    this.squadId = squadId;
+    this.squadIds = Array.isArray(squadIds) ? squadIds : [squadIds];
+    this.squadId = this.squadIds[0];
+    this.formationId = formationId;
     this.mission = mission;
     this.startTime = Date.now();
     this.durationMs = mission.duration * 1000;
@@ -234,10 +301,10 @@ class ActiveMission {
   }
 
   complete() {
-    const squad = game.squads.find(s => s.id === this.squadId);
-    if (!squad) return;
+    const squads = game.squads.filter(squad => this.squadIds.includes(squad.id));
+    if (squads.length === 0) return;
 
-    const members = squad.getMembers();
+    const members = squads.flatMap(squad => squad.getMembers());
     const memberCount = Math.max(members.length, 1);
 
     // Distribute experience to all soldiers
@@ -247,10 +314,13 @@ class ActiveMission {
     });
 
     // Award base gold with squad bonus
-    const squadBonus = 1 + squad.getSquadBonus();
-    const goldReward = Math.floor(this.mission.gold * squadBonus);
+    const formation = game.formations.find(item => item.id === this.formationId);
+    const commandBonus = formation ? formation.definition.bonus : Math.min(Math.max(squads.length - 1, 0) * 0.05, 0.25);
+    const goldReward = Math.floor(this.mission.gold * (1 + commandBonus));
     game.gold += goldReward;
     game.totalEarned += goldReward;
+    game.intel += this.mission.requiredSquads && this.mission.requiredSquads > 1 ? 1 : 0;
+    game.supplies = Math.min(100, game.supplies + Math.max(1, Math.floor(this.mission.supplies || 1) / 2));
 
     // Generate equipment rewards (1-3 pieces)
     const numRewards = Math.min(this.mission.rewards, 3);
@@ -259,7 +329,15 @@ class ActiveMission {
       game.equipment.push(equipment);
     }
 
-    squad.completedMissions += 1;
+    squads.forEach(squad => {
+      squad.completedMissions += 1;
+      squad.readiness = Math.max(0, squad.readiness - (this.mission.requiredSquads > 1 ? 20 : 8));
+      if (!formation) squad.formationId = null;
+    });
+    if (formation) {
+      formation.completedMissions += 1;
+      formation.status = 'ready';
+    }
     game.totalMissionsCompleted += 1;
 
     // Notification
@@ -359,19 +437,109 @@ function removeFromSquad(soldierId) {
   }
 }
 
-function startMission(squadId, missionId) {
-  const squad = game.squads.find(s => s.id === squadId);
-  const mission = MISSIONS.find(m => m.id === missionId);
+function isSquadDeployed(squadId) {
+  return game.activeMissions.some(mission => mission.squadIds.includes(squadId));
+}
 
-  if (!squad || !mission) return;
-  if (!squad.canCompleteOfficially(mission)) {
-    addNotification(`Squad clearance insufficient for ${mission.name}`, 'error');
+function getAvailableSquads() {
+  return game.squads.filter(squad => !isSquadDeployed(squad.id) && squad.readiness >= 20);
+}
+
+function createFormation(type) {
+  const definition = FORMATION_DEFINITIONS[type];
+  if (!definition) return;
+  const availableSquads = getAvailableSquads().filter(squad => squad.formationId === null);
+  if (availableSquads.length < definition.requiredSquads) {
+    addNotification(`${definition.label} requires ${definition.requiredSquads} ready squads.`, 'error');
     return;
   }
 
-  const activeMission = new ActiveMission(squadId, mission, game.missionIdCounter++);
+  const selectedSquads = availableSquads.slice(0, definition.requiredSquads);
+  const formation = new Formation(game.formationIdCounter++, type, selectedSquads.map(squad => squad.id));
+  const leader = formation.getMembers().sort((a, b) => b.level - a.level)[0];
+  formation.leaderId = leader ? leader.id : null;
+  game.formations.push(formation);
+  selectedSquads.forEach(squad => { squad.formationId = formation.id; });
+  addNotification(`🛡️ ${formation.name} organized with ${selectedSquads.length} squads.`, 'success');
+  render();
+}
+
+function disbandFormation(formationId) {
+  const formation = game.formations.find(item => item.id === formationId);
+  if (!formation || formation.status === 'deployed') return;
+  formation.squadIds.forEach(squadId => {
+    const squad = game.squads.find(item => item.id === squadId);
+    if (squad) squad.formationId = null;
+  });
+  game.formations = game.formations.filter(item => item.id !== formationId);
+  addNotification(`Formation ${formation.name} disbanded.`, 'info');
+  render();
+}
+
+function getMissionForce(mission) {
+  const requiredSquads = mission.requiredSquads || 1;
+  if (requiredSquads === 1) {
+    const squad = getAvailableSquads().find(item => item.memberIds.length > 0 && item.canCompleteOfficially(mission));
+    return squad ? { squadIds: [squad.id], formationId: null } : null;
+  }
+
+  const formation = game.formations.find(item =>
+    item.type === mission.commandLevel && item.isComplete() && item.status === 'ready' &&
+    item.getAverageLevel() >= mission.minLevel && item.getSquads().every(squad => !isSquadDeployed(squad.id))
+  );
+  if (formation) return { squadIds: formation.squadIds, formationId: formation.id };
+
+  const squads = getAvailableSquads().filter(item => item.memberIds.length > 0);
+  if (squads.length < requiredSquads) return null;
+  const selected = squads.slice(0, requiredSquads);
+  const members = selected.flatMap(squad => squad.getMembers());
+  const averageLevel = members.length ? members.reduce((sum, member) => sum + member.level, 0) / members.length : 0;
+  return averageLevel >= mission.minLevel
+    ? { squadIds: selected.map(squad => squad.id), formationId: null }
+    : null;
+}
+
+function startMission(squadId, missionId) {
+  startMissionWithSquads([squadId], missionId);
+}
+
+function startMissionWithSquads(squadIds, missionId, formationId = null) {
+  const mission = ALL_MISSIONS.find(item => item.id === missionId);
+  const uniqueSquadIds = [...new Set(squadIds)];
+  const squads = game.squads.filter(squad => uniqueSquadIds.includes(squad.id));
+  const requiredSquads = mission?.requiredSquads || 1;
+
+  if (!mission || squads.length !== uniqueSquadIds.length) return;
+  if (squads.length < requiredSquads) {
+    addNotification(`${mission.name} requires ${requiredSquads} squads.`, 'error');
+    return;
+  }
+  if (squads.some(squad => squad.memberIds.length === 0 || isSquadDeployed(squad.id) || squad.readiness < 20)) {
+    addNotification('One or more selected squads are unavailable.', 'error');
+    return;
+  }
+  const members = squads.flatMap(squad => squad.getMembers());
+  const averageLevel = members.length ? members.reduce((sum, member) => sum + member.level, 0) / members.length : 0;
+  if (averageLevel < mission.minLevel) {
+    addNotification(`Force level is too low for ${mission.name}.`, 'error');
+    return;
+  }
+  if (game.supplies < (mission.supplies || 0)) {
+    addNotification(`Insufficient supplies: ${mission.supplies} required.`, 'error');
+    return;
+  }
+
+  game.supplies -= mission.supplies || 0;
+  const activeMission = new ActiveMission(uniqueSquadIds, mission, game.missionIdCounter++, formationId);
   game.activeMissions.push(activeMission);
-  addNotification(`🎯 ${squad.name} executing: ${mission.name}...`, 'info');
+  squads.forEach(squad => {
+    squad.readiness = Math.max(0, squad.readiness - (requiredSquads > 1 ? 10 : 4));
+    if (formationId !== null) {
+      const formation = game.formations.find(item => item.id === formationId);
+      if (formation) formation.status = 'deployed';
+    }
+  });
+  addNotification(`🎯 ${squads.length} squad${squads.length === 1 ? '' : 's'} executing: ${mission.name}...`, 'info');
   render();
 }
 
@@ -395,7 +563,10 @@ function deleteSoldier(soldierId) {
 function deleteSquad(squadId) {
   const squad = game.squads.find(s => s.id === squadId);
   if (squad) {
-    game.activeMissions = game.activeMissions.filter(mission => mission.squadId !== squadId);
+    game.activeMissions = game.activeMissions.filter(mission => !mission.squadIds.includes(squadId));
+    game.formations.forEach(formation => {
+      formation.squadIds = formation.squadIds.filter(id => id !== squadId);
+    });
     // Remove all members
     [...squad.memberIds].forEach(soldierId => {
       removeFromSquad(soldierId);
@@ -438,6 +609,16 @@ function updateActiveMissions() {
     return true;
   });
   return missionCompleted;
+}
+
+function recoverReadiness() {
+  const now = Date.now();
+  const elapsedSeconds = Math.floor((now - game.lastReadinessRecovery) / 1000);
+  if (elapsedSeconds < 1) return;
+  game.lastReadinessRecovery = now;
+  game.squads.forEach(squad => {
+    if (!isSquadDeployed(squad.id)) squad.readiness = Math.min(100, squad.readiness + elapsedSeconds);
+  });
 }
 
 function isRecord(value) {
@@ -485,14 +666,29 @@ function restoreSoldier(value) {
 
 function restoreSquad(value) {
   if (!isRecord(value)) return null;
-  const squad = restoreInstance(Squad.prototype, value, ['id', 'name', 'memberIds', 'completedMissions']);
+  const squad = restoreInstance(Squad.prototype, value, ['id', 'name', 'memberIds', 'completedMissions', 'readiness', 'formationId']);
   squad.id = restoreNumber(value.id, 0);
   squad.name = typeof value.name === 'string' ? value.name : `Squad ${squad.id}`;
   squad.memberIds = Array.isArray(value.memberIds)
     ? value.memberIds.filter(id => Number.isInteger(id))
     : [];
   squad.completedMissions = restoreNumber(value.completedMissions, 0);
+  squad.readiness = restoreNumber(value.readiness, 100, 0);
+  squad.formationId = Number.isInteger(value.formationId) ? value.formationId : null;
   return squad;
+}
+
+function restoreFormation(value) {
+  if (!isRecord(value) || !FORMATION_DEFINITIONS[value.type]) return null;
+  const formation = restoreInstance(Formation.prototype, value, ['id', 'type', 'name', 'squadIds', 'leaderId', 'status', 'completedMissions']);
+  formation.id = restoreNumber(value.id, 0);
+  formation.type = value.type;
+  formation.name = typeof value.name === 'string' ? value.name : `${FORMATION_DEFINITIONS[value.type].label} ${formation.id}`;
+  formation.squadIds = Array.isArray(value.squadIds) ? value.squadIds.filter(id => Number.isInteger(id)) : [];
+  formation.leaderId = Number.isInteger(value.leaderId) ? value.leaderId : null;
+  formation.status = ['ready', 'deployed'].includes(value.status) ? value.status : 'ready';
+  formation.completedMissions = restoreNumber(value.completedMissions, 0);
+  return formation;
 }
 
 function restoreEquipment(value) {
@@ -510,11 +706,15 @@ function restoreEquipment(value) {
 
 function restoreActiveMission(value) {
   if (!isRecord(value) || !isRecord(value.mission)) return null;
-  const mission = MISSIONS.find(item => item.id === value.mission.id);
+  const mission = ALL_MISSIONS.find(item => item.id === value.mission.id);
   if (!mission) return null;
-  const activeMission = restoreInstance(ActiveMission.prototype, value, ['id', 'squadId', 'startTime']);
+  const activeMission = restoreInstance(ActiveMission.prototype, value, ['id', 'squadId', 'squadIds', 'formationId', 'startTime']);
   activeMission.id = restoreNumber(value.id, 0);
-  activeMission.squadId = restoreNumber(value.squadId, 0);
+  activeMission.squadIds = Array.isArray(value.squadIds)
+    ? value.squadIds.filter(id => Number.isInteger(id))
+    : [restoreNumber(value.squadId, 0)];
+  activeMission.squadId = activeMission.squadIds[0];
+  activeMission.formationId = Number.isInteger(value.formationId) ? value.formationId : null;
   activeMission.mission = mission;
   activeMission.startTime = restoreNumber(value.startTime, Date.now());
   activeMission.durationMs = mission.duration * 1000;
@@ -528,17 +728,27 @@ function restoreSavedState(data) {
   game.squadIdCounter = restoreNumber(data.squadIdCounter, game.squadIdCounter);
   game.missionIdCounter = restoreNumber(data.missionIdCounter, game.missionIdCounter);
   game.equipmentIdCounter = restoreNumber(data.equipmentIdCounter, game.equipmentIdCounter);
+  game.formationIdCounter = restoreNumber(data.formationIdCounter, game.formationIdCounter);
   game.totalMissionsCompleted = restoreNumber(data.totalMissionsCompleted, game.totalMissionsCompleted);
   game.totalSoldiersRecruited = restoreNumber(data.totalSoldiersRecruited, game.totalSoldiersRecruited);
   game.playtime = restoreNumber(data.playtime, game.playtime);
   game.soldiers = Array.isArray(data.soldiers) ? data.soldiers.map(restoreSoldier).filter(Boolean) : [];
   game.squads = Array.isArray(data.squads) ? data.squads.map(restoreSquad).filter(Boolean) : [];
+  game.formations = Array.isArray(data.formations) ? data.formations.map(restoreFormation).filter(Boolean) : [];
+  game.formations = game.formations.filter(formation => formation.squadIds.every(squadId => game.squads.some(squad => squad.id === squadId)));
+  game.squads.forEach(squad => {
+    const formation = game.formations.find(item => item.squadIds.includes(squad.id));
+    squad.formationId = formation ? formation.id : null;
+  });
   game.activeMissions = Array.isArray(data.activeMissions)
     ? data.activeMissions.map(restoreActiveMission).filter(Boolean)
     : [];
   game.activeMissions = game.activeMissions.filter(activeMission =>
-    game.squads.some(squad => squad.id === activeMission.squadId)
+    activeMission.squadIds.length > 0 && activeMission.squadIds.every(squadId => game.squads.some(squad => squad.id === squadId))
   );
+  game.intel = restoreNumber(data.intel, game.intel);
+  game.supplies = restoreNumber(data.supplies, game.supplies, 0);
+  game.lastReadinessRecovery = restoreNumber(data.lastReadinessRecovery, Date.now());
   game.equipment = Array.isArray(data.equipment) ? data.equipment.map(restoreEquipment).filter(Boolean) : [];
   game.notifications = Array.isArray(data.notifications)
     ? data.notifications.filter(isRecord).map(notification => ({
@@ -596,6 +806,7 @@ function render() {
   renderRecruitment();
   renderSoldiers();
   renderSquads();
+  renderFormations();
   renderMissions();
   renderActiveMissions();
   if (missionCompleted) updateMissionProgressDisplay();
@@ -617,9 +828,11 @@ function renderResources() {
   const statsEl = document.getElementById('gameStats');
   if (statsEl) {
     statsEl.innerHTML = `
-      Ops: ${game.totalMissionsCompleted} | 
-      Deployed: ${game.totalSoldiersRecruited} | 
-      Gear: ${game.equipment.length}
+      Ops: ${game.totalMissionsCompleted} |
+      Deployed: ${game.totalSoldiersRecruited} |
+      Gear: ${game.equipment.length} |
+      Intel: ${game.intel} |
+      Supplies: ${Math.floor(game.supplies)}%
     `;
   }
 }
@@ -647,12 +860,18 @@ function renderRecruitment() {
 
 function renderSoldiers() {
   const container = document.getElementById('soldiersList');
+  const filter = document.getElementById('soldierFilter')?.value.trim().toLowerCase() || '';
+  const soldiers = game.soldiers.filter(soldier => !filter || `${soldier.name} ${soldier.class}`.toLowerCase().includes(filter));
   if (game.soldiers.length === 0) {
     container.innerHTML = '<div class="empty-state">No operatives deployed yet. Deploy your first!</div>';
     return;
   }
+  if (soldiers.length === 0) {
+    container.innerHTML = '<div class="empty-state">No operatives match that search.</div>';
+    return;
+  }
 
-  container.innerHTML = game.soldiers.map(soldier => {
+  container.innerHTML = soldiers.map(soldier => {
     const inSquad = soldier.squadId !== null;
     const equipment = game.equipment.filter(e => soldier.equipmentIds.includes(e.id));
     
@@ -698,12 +917,13 @@ function renderSquads() {
     const members = squad.getMembers();
     const avgLevel = squad.getAverageLevel();
     const bonus = Math.floor(squad.getSquadBonus() * 100);
+    const deployed = isSquadDeployed(squad.id);
     
     return `
-      <div class="squad-item">
+      <div class="squad-item" style="opacity: ${deployed ? '0.65' : '1'}">
         <div class="squad-header">
           <span class="squad-name">${escapeHtml(squad.name)}</span>
-          <span class="squad-stats">Lvl ${avgLevel} | ${members.length}/5 | Ops: ${squad.completedMissions}</span>
+          <span class="squad-stats">Lvl ${avgLevel} | ${members.length}/5 | Ready: ${Math.floor(squad.readiness)}% | Ops: ${squad.completedMissions}</span>
         </div>
         <div class="squad-stats" style="font-size: 11px;">
           ⚔️ ${squad.getTotalDamage().toFixed(1)} | 🛡️ ${squad.getTotalDefense().toFixed(1)} | ❤️ ${Math.floor(squad.getTotalHealth())} | Bonus: +${bonus}%
@@ -712,7 +932,7 @@ function renderSquads() {
           ${members.length === 0 ? '<span class="squad-stats">Empty</span>' : members.map(m => `<div class="member-badge">${escapeHtml(m.name)}</div>`).join('')}
         </div>
         <div class="squad-actions">
-          <button onclick="deleteSquad(${squad.id})" class="btn-small btn-danger">Disband</button>
+          <button onclick="deleteSquad(${squad.id})" class="btn-small btn-danger" ${deployed ? 'disabled' : ''}>Disband</button>
         </div>
       </div>
     `;
@@ -726,31 +946,67 @@ function renderSquads() {
   container.appendChild(btn);
 }
 
+function renderFormations() {
+  const container = document.getElementById('formationsList');
+  if (!container) return;
+  const formationTypes = Object.keys(FORMATION_DEFINITIONS);
+  const controls = formationTypes.map(type => {
+    const definition = FORMATION_DEFINITIONS[type];
+    const canForm = getAvailableSquads().filter(squad => squad.formationId === null).length >= definition.requiredSquads;
+    return `<button class="btn-small" onclick="createFormation('${type}')" ${canForm ? '' : 'disabled'}>+ ${definition.label}</button>`;
+  }).join('');
+  const formations = game.formations.map(formation => `
+    <div class="squad-item">
+      <div class="squad-header">
+        <span class="squad-name">${escapeHtml(formation.name)}</span>
+        <span class="squad-stats">${formation.squadIds.length}/${formation.definition.requiredSquads} squads | ${escapeHtml(formation.status)}</span>
+      </div>
+      <div class="squad-stats">Leader: ${escapeHtml(formation.definition.leader)}${formation.leaderId !== null ? ` (${escapeHtml(game.soldiers.find(soldier => soldier.id === formation.leaderId)?.name || 'Assigned')})` : ''} | Avg Lvl: ${formation.getAverageLevel()} | Strength: ${Math.floor(formation.getStrength())}</div>
+      <div class="squad-actions"><button class="btn-small btn-danger" onclick="disbandFormation(${formation.id})" ${formation.status === 'deployed' ? 'disabled' : ''}>Disband</button></div>
+    </div>
+  `).join('');
+  container.innerHTML = `${formations || '<div class="empty-state">No higher formations organized yet.</div>'}<div class="squad-actions formation-controls">${controls}</div>`;
+}
+
 function renderMissions() {
   const container = document.getElementById('missionsList');
   const squadsWithMembers = game.squads.filter(s => s.memberIds.length > 0);
+  const filter = document.getElementById('missionFilter')?.value || 'all';
 
   if (squadsWithMembers.length === 0) {
     container.innerHTML = '<div class="empty-state">Assemble a task force to start operations!</div>';
     return;
   }
 
-  container.innerHTML = MISSIONS.map(mission => {
-    const eligibleSquads = squadsWithMembers.filter(s => s.canCompleteOfficially(mission));
-    const canStart = eligibleSquads.length > 0;
+  const missions = ALL_MISSIONS.filter(mission => {
+    const isCommandOperation = (mission.requiredSquads || 1) > 1;
+    if (filter === 'squad') return !isCommandOperation;
+    if (filter === 'command') return isCommandOperation;
+    if (filter === 'ready') return Boolean(getMissionForce(mission));
+    return true;
+  });
+
+  container.innerHTML = missions.map(mission => {
+    const force = getMissionForce(mission);
+    const requiredSquads = mission.requiredSquads || 1;
+    const eligibleSquads = squadsWithMembers.filter(s => s.canCompleteOfficially(mission) && !isSquadDeployed(s.id));
+    const isCommandOperation = requiredSquads > 1;
+    const action = isCommandOperation
+      ? (force ? `<button onclick='startMissionWithSquads(${JSON.stringify(force.squadIds)}, "${mission.id}", ${force.formationId === null ? 'null' : force.formationId})' class="btn-mission-small">Deploy ${requiredSquads} Squads</button>` : '<span class="mission-unavailable">FORCE NOT READY</span>')
+      : (eligibleSquads.length === 0 ? '<span class="mission-unavailable">CLEARANCE DENIED</span>' : eligibleSquads.map(squad => `
+        <button onclick="startMission(${squad.id}, '${mission.id}')" class="btn-mission-small">
+          ${escapeHtml(squad.name)}
+        </button>
+      `).join(''));
     
     return `
       <div class="mission-item" style="border-left: 4px solid ${['#888', '#4ade80', '#3b82f6', '#a855f7', '#f59e0b'][mission.difficulty]}">
         <div class="mission-info">
-          <span class="mission-name">${mission.name}</span>
-          <span class="mission-reward">⏱️ ${mission.duration}s | 💰 ${mission.gold} cr | ✨ ${mission.exp}xp | 🎁 ${mission.rewards} ${mission.loot} | Lvl ${mission.minLevel}+</span>
+          <span class="mission-name">${escapeHtml(mission.name)}${isCommandOperation ? ` <small>· ${escapeHtml(FORMATION_DEFINITIONS[mission.commandLevel].label)}</small>` : ''}</span>
+          <span class="mission-reward">⏱️ ${mission.duration}s | 💰 ${mission.gold} cr | ✨ ${mission.exp}xp | 🎁 ${mission.rewards} ${escapeHtml(mission.loot)} | Lvl ${mission.minLevel}+${isCommandOperation ? ` | 🛡️ ${requiredSquads} squads | 📦 ${mission.supplies} supplies` : ''}</span>
         </div>
         <div class="mission-actions">
-          ${eligibleSquads.length === 0 ? '<span class="mission-unavailable">CLEARANCE DENIED</span>' : eligibleSquads.map(squad => `
-            <button onclick="startMission(${squad.id}, '${mission.id}')" class="btn-mission-small">
-              ${escapeHtml(squad.name)}
-            </button>
-          `).join('')}
+          ${action}
         </div>
       </div>
     `;
@@ -765,7 +1021,8 @@ function renderActiveMissions() {
   }
 
   container.innerHTML = game.activeMissions.map(mission => {
-    const squad = game.squads.find(s => s.id === mission.squadId);
+    const squads = game.squads.filter(squad => mission.squadIds.includes(squad.id));
+    const squadNames = squads.map(squad => squad.name).join(', ');
     const progress = mission.getProgress() * 100;
     const timeRemaining = Math.ceil((1 - mission.getProgress()) * mission.mission.duration);
     
@@ -773,7 +1030,7 @@ function renderActiveMissions() {
       <div class="mission-run" data-mission-id="${mission.id}">
         <div class="mission-run-header">
           <span class="mission-run-name">
-            ${escapeHtml(squad.name)} — ${escapeHtml(mission.mission.name)}
+            ${escapeHtml(squadNames)} — ${escapeHtml(mission.mission.name)}
           </span>
           <span class="mission-run-time" data-mission-time="${mission.id}">${timeRemaining}s</span>
         </div>
@@ -781,7 +1038,7 @@ function renderActiveMissions() {
           <div class="progress-fill" data-mission-progress="${mission.id}" style="width: ${progress}%"></div>
         </div>
         <div class="mission-rewards-preview">
-          💰 ${mission.mission.gold} | ✨ ${mission.mission.exp} | 🎁 ${mission.mission.rewards}x loot
+          💰 ${mission.mission.gold} | ✨ ${mission.mission.exp} | 🎁 ${mission.mission.rewards}x loot | 🛡️ ${mission.squadIds.length} squad${mission.squadIds.length === 1 ? '' : 's'}
         </div>
       </div>
     `;
@@ -843,6 +1100,7 @@ function createSquadAndAdd(soldierId) {
 
 // Fast loop for smooth progress bar animation (updates every 50ms)
 setInterval(() => {
+  recoverReadiness();
   const missionCompleted = updateActiveMissions();
   updateMissionProgressDisplay();
   // Re-render UI if a mission just completed to show rewards
