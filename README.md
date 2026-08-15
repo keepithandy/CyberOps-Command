@@ -1,67 +1,30 @@
-<<<<<<< HEAD
-# Legion Forge
-
-Legion Forge is an idle army management game built in vanilla JavaScript.
-=======
 # ⚡ CyberOps: Command
 **Deploy. Infiltrate. Dominate.**
 
 An idle army management game where you recruit, equip, and deploy elite cyber operatives on covert missions. Build your intelligence agency from the ground up—one operative at a time.
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
 
 > **Current Version:** `0.0.1 Alpha`  
 > **Status:** Playable Early Prototype  
 > **Built with:** Vanilla JavaScript (no frameworks, no build steps)
 
-<<<<<<< HEAD
-Recruit soldiers, organize them into squads, send them on missions, collect rewards, and grow a persistent legion over time.
-=======
 ---
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
 
 ## 🎮 Quick Start
 
-<<<<<<< HEAD
-- Recruit multiple soldier types with different stats, costs, and abilities
-- Track soldiers individually with levels, experience, and equipment
-- Create squads and manage squad membership
-- Start missions with time-based completion and rewards
-- Earn gold, experience, and equipment from completed missions
-- Persist game state in `localStorage`
-=======
 1. Open `index.html` in any modern web browser
 2. You start with 5,000 credits—use them to recruit your first operatives
 3. Organize recruits into task forces (squads)
 4. Deploy task forces on cyber operations to earn credits and experience
 5. Equip fallen enemies' tech to boost your operatives' abilities
 6. Unlock harder missions as your operatives level up
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
 
 **That's it.** No installation, no dependencies, no fuss.
 
-<<<<<<< HEAD
-1. Recruit your first soldiers using starting gold
-2. Create a squad and add soldiers to it
-3. Select an available mission and assign a squad
-4. Wait for the mission to complete
-5. Collect rewards and improve your army
-=======
 ---
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
 
 ## 🎯 Core Gameplay Loop
 
-<<<<<<< HEAD
-```text
-.
-├── index.html
-├── game.js
-└── README.md
-=======
-```
-Recruit → Equip → Organize → Deploy → Earn → Upgrade → Repeat
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
-```
+Recruit -> Equip -> Organize -> Deploy -> Earn -> Upgrade -> Repeat
 
 ### 1. **Recruit** Elite Operatives
 Choose from five operative archetypes, each with unique abilities:
@@ -71,51 +34,14 @@ Choose from five operative archetypes, each with unique abilities:
 - **Augmented** (System Override) — cyborg damage dealer
 - **Commando** (Blitzkrieg) — elite glass cannon
 
-<<<<<<< HEAD
-1. Clone or copy all files into a directory
-2. Open `index.html` in a web browser
-3. No build step or server is required
-=======
 ### 2. **Equip** with Cyber Augmentations
 Earn loot from missions and outfit operatives with:
 - **Offensive Gear:** Neural Processors, Combat Algorithms, AI Combat Suites
 - **Defensive Tech:** Reactive Bodysuits, Tactical Exoskeletons, Quantum Shielding
 - **Exotic Augments:** Nanotech Armor, Enhanced Reflexes, Regenerative Implants
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
 
 Each item has a rarity tier—legendary gear provides massive stat boosts.
 
-<<<<<<< HEAD
-### Game State
-
-All state is stored in the `game` object:
-
-- `gold` - Currency
-- `soldiers` - Array of soldier objects
-- `squads` - Array of squad objects
-- `activeMissions` - Array of currently running missions
-- `equipment` - Array of generated equipment items
-
-### Core Classes
-
-- `Soldier` - Individual unit with stats, level, experience, and equipment
-- `Squad` - Container for up to 5 soldiers with mission readiness checks
-- `ActiveMission` - Tracks running mission progress and completion rewards
-
-### Game Loop
-
-The game updates mission progress continuously and re-renders the UI when state changes.
-
-## Save System
-
-The game currently saves automatically to `localStorage` every 10 seconds using the `idleArmySave` key.
-
-Load behavior restores the saved game state on page load. This means progress is preserved across refreshes in the same browser.
-
-## License
-
-MIT
-=======
 ### 3. **Organize** into Task Forces
 Group up to 5 operatives per squad. Squad composition matters:
 - Balanced teams for medium ops
@@ -399,4 +325,3 @@ Released under the MIT License—fork, experiment, and build on this foundation.
 Join the command center. Deploy your operatives. Dominate the digital battlefield.
 
 **CyberOps: Command** — Version 0.0.1 Alpha
->>>>>>> ae0c335b6453fc9c6c423f7929dd59c101d77197
