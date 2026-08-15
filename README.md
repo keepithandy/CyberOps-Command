@@ -3,7 +3,7 @@
 
 A cyber operations management game where you recruit, equip, and deploy elite operatives on covert missions. Build your intelligence agency from the ground up—one operative at a time.
 
-> **Current Version:** `0.0.1 Alpha`  
+> **Current Version:** `0.0.1.5 Alpha`
 > **Status:** Playable Early Prototype  
 > **Built with:** Vanilla JavaScript (no frameworks, no build steps)
 
@@ -318,4 +318,4 @@ Released under the MIT License—fork, experiment, and build on this foundation.
 
 Join the command center. Deploy your operatives. Dominate the digital battlefield.
 
-**CyberOps:Command** — Version 0.0.1 Alpha
+**CyberOps:Command** — Version 0.0.1.5 Alpha
